@@ -1694,8 +1694,7 @@ void RooHybridBDTAutoPdf::TrainForest(int ntrees, bool reuseforest) {
       RooRealVar *cloneparm = static_cast<RooRealVar*>(fFullParmsClones[ithread].at(ivar));
       cloneparm->setVal(static_cast<RooRealVar*>(fFullParms.at(ivar))->getVal());
       cloneparm->setError(static_cast<RooRealVar*>(fFullParms.at(ivar))->getError());
-
-      std::cout << "Printing " << (fFullParms.at(ivar))->GetTitle() << (fFullParms.at(ivar))->getVal() << std::endl;
+      // std::cout << "Printing " << (fFullParms.at(ivar))->GetTitle() << (fFullParms.at(ivar))->getVal() << std::endl;
     }
   }      
   
