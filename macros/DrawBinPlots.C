@@ -139,35 +139,29 @@ void DrawBinPlots(
     else if ( (string)getenv("USEGLOBALPTBINS") == "Y" )  useglobalptbins = true ;
     else                                                  useglobalptbins = false;
 
-    cout << "Global pt bins: " << useglobalptbins << endl;
+    bool testcombination = true;
+
 
     //#######################################
     // Event selection
     //#######################################
 
     // Cut on event number, should be orthogonal to training cuts
-    TCut eventcut = "eventNumber%2==1";
+    // TCut eventcut = "eventNumber%2==1";
+    TCut eventcut = "";
+    
     TCut NtupIDcut;
     if ( (string)getenv("TESTRUN")=="Y" ){
         // Use only part of sample
         // TCut NtupIDcut = "(NtupID>400&&NtupID<800) || (NtupID>12000&&NtupID<12400)";
-        // TCut NtupIDcut = "NtupID%200==1";
-        // TCut NtupIDcut = "eventNumber%20==1";;
-        if(highpt) NtupIDcut = "eventNumber%400==1" ;
-        else       NtupIDcut = "eventNumber%20==1" ;
+        // TCut NtupIDcut = "NtupID%20==1||NtupID%21==1";
+        TCut NtupIDcut = "eventNumber%20==1||eventNumber%20==0";;
+        // if(highpt) NtupIDcut = "eventNumber%400==1" ;
+        // else       NtupIDcut = "eventNumber%20==1" ;
         eventcut *= NtupIDcut;
         }
 
-    // Apply additional cut on pt if the up-to-2TeV training is used
-    if ( !(getenv("USE2TEVCUT")==NULL) ){
-        if ( (string)getenv("USE2TEVCUT")=="Y" ){
-            TCut pt2TeV = "genPt<2000" ;
-            eventcut *= pt2TeV;
-            }
-        }
-
     RooRealVar weightvar("weightvar","",1.);
-
     TCut selweight;
     if(weighted)
         selweight= "(weight)";
@@ -215,8 +209,11 @@ void DrawBinPlots(
         ws = (RooWorkspace*)fws->Get("wereg_eb");  
     else
         ws = (RooWorkspace*)fws->Get("wereg_ee");  
-    ws->Print();
+    // ws->Print();
   
+    RooWorkspace *ws_comb = (RooWorkspace*)fws->Get("wereg_comb");
+
+
     // Read variables from workspace
     RooGBRTargetFlex *meantgt;
     if (dobarrel) 
@@ -321,11 +318,20 @@ void DrawBinPlots(
     rawvar->setRange(0.,2.);
     rawvar->setBins(800);
 
-    RooRealVar *ecor74var;
     RooFormulaVar ecor74( "ecor74", "@0/@1", RooArgList( *cor74E, *genE ) );
-    ecor74var = (RooRealVar*)hdata->addColumn(ecor74);
+    RooRealVar *ecor74var = (RooRealVar*)hdata->addColumn(ecor74);
     ecor74var->setRange(0.,2.);
     ecor74var->setBins(800);
+
+
+    // if (testcombination):
+
+    //     //formula for target of the EP combination
+    //     RooFormulaVar EPcomb("EPcomb", "", "(@1/@0)", RooArgList(*tgtvar,*sigmeanlim) );
+    //     RooRealVar *EPcombvar = (RooRealVar*)hdata->addColumn(EPcomb);
+    //     EPcombvar->setRange(0.,2);
+    //     EPcombvar->setBins(800);
+
 
 
     cout << "Finished reading variables" << endl;

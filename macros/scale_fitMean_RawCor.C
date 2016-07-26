@@ -798,15 +798,17 @@ void scale_fitMean_RawCor(
     //#######################################
 
     // Cut on event number, should be orthogonal to training cuts
-    TCut eventcut = "eventNumber%2==1";
+    // TCut eventcut = "eventNumber%2==1";
+    TCut eventcut = "";
     TCut NtupIDcut;
     if ( (string)getenv("TESTRUN")=="Y" ){
         // Use only part of sample
         // TCut NtupIDcut = "(NtupID>400&&NtupID<800) || (NtupID>12000&&NtupID<12400)";
         // TCut NtupIDcut = "NtupID%200==1";
         // TCut NtupIDcut = "eventNumber%20==1";;
-        if(highpt) NtupIDcut = "eventNumber%400==1" ;
-        else       NtupIDcut = "eventNumber%20==1" ;
+        // if(highpt) NtupIDcut = "eventNumber%10==1" ;
+        // else       NtupIDcut = "eventNumber%10==1" ;
+        NtupIDcut = "eventNumber%20==0||eventNumber%20==1" ;
         eventcut *= NtupIDcut;
         }
 

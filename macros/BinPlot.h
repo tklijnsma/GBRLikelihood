@@ -182,15 +182,16 @@ class BinPlot {
     bool add_extension_to_filename_ = false;
     TString extension_ = "";
 
-    Double_t fitxmin_ = 0.8, fitxmax_ = 1.1;
+    Double_t fitxmin_ = 0.9, fitxmax_ = 1.1;
 
     // For plotting purposes
     Double_t ymin_ = 0.9, ymax_ = 1.1 ;
     Double_t ymin_sigma_ = 0.0, ymax_sigma_ = 0.1 ;
     Double_t sliceplot_hmargin_ = 0.07;
+    Double_t sliceplot_legheight_ = 0.12;
 
     // Dimensions of main slice canvas
-    Int_t c_width_ = 2000, c_height_ = 800;
+    Int_t c_width_ = 1000, c_height_ = 800;
 
     // Dimensions (in pixels) of 1 subplot of the perbin plots
     Int_t perbin_width_ = 1000, perbin_height_ = 800;
@@ -305,13 +306,26 @@ void BinPlot::FitOneSlice(
 
     c->cd(ibin+1);
 
+    gPad->SetLeftMargin(0.14);
+    gPad->SetBottomMargin(0.14);
+    gPad->SetRightMargin(0.01);
+    gPad->SetTopMargin(0.1);
+
     RooPlot *var_datapoints = var->frame(0.,2, 250);
     
     // var_datapoints->SetTitle( "Distribution of " + varname + "/true " + sel_str );
     var_datapoints->SetTitle( varname + "/true " + sel_str );
+    var_datapoints->SetTitleSize(0.06);
+
     var_datapoints->GetXaxis()->SetTitle( varname + "/true" );
-    // gPad->SetGridx();
-    // gPad->SetGridy();
+    var_datapoints->GetXaxis()->SetLimits( 0., 1.3 );
+
+    var_datapoints->GetXaxis()->SetLabelSize(0.05);
+    var_datapoints->GetXaxis()->SetTitleSize(0.06);
+
+    var_datapoints->GetYaxis()->SetLabelSize(0.05);
+    var_datapoints->GetYaxis()->SetTitleSize(0.06);
+
     
     hdata_reduced->plotOn( var_datapoints, Name( "datapoints" + varname ), MarkerSize(0.02));
     pdfCB.plotOn( var_datapoints, Name( "fit" + varname ), LineColor(kRed), PrintEvalErrors(-1) );
@@ -322,12 +336,14 @@ void BinPlot::FitOneSlice(
     // Labels
 
     TLatex *l = new TLatex();
+    l->SetTextAlign(13);
     l->SetNDC();
     l->SetTextSize(0.05);
 
-    Double_t text_x     = 0.72;
+    Double_t text_x     = 0.18;
     Double_t textheight = 0.65;
-    Double_t nextline   = 0.06;
+    Double_t nextline   = 0.07;
+    Double_t column_shift = 0.1;
 
     TString TString_effsigma        ;
     TString TString_mean            ;
@@ -336,24 +352,17 @@ void BinPlot::FitOneSlice(
     TString TString_error_on_sigma  ;
 
     TString_effsigma        .Form( "%.4f", effsigma        );   
-    TString_mean            .Form( "%.4f", mean.getVal()   );   
-    TString_error_on_mean   .Form( "%.4f", mean.getError() );   
-    TString_sigma           .Form( "%.4f", sig.getVal()    );   
-    TString_error_on_sigma  .Form( "%.4f", sig.getError()  );   
+    TString_mean            .Form( "%.4f #pm %.4f", mean.getVal(), mean.getError() );   
+    TString_sigma           .Form( "%.4f #pm %.4f", sig.getVal(),  sig.getError() );   
 
-    l->DrawLatex( text_x - 0.1, textheight, "#sigma_{eff}"         );
-    l->DrawLatex( text_x      , textheight, TString_effsigma       ); textheight -= nextline;
-    l->DrawLatex( text_x - 0.1, textheight, "#mu_{CB}"             );
-    l->DrawLatex( text_x      , textheight, TString_mean           ); textheight -= nextline;
-    l->DrawLatex( text_x - 0.1, textheight, "#Delta#mu_{CB}"       );
-    l->DrawLatex( text_x      , textheight, TString_error_on_mean  ); textheight -= nextline;
-    l->DrawLatex( text_x - 0.1, textheight, "#sigma_{CB}"          );
-    l->DrawLatex( text_x      , textheight, TString_sigma          ); textheight -= nextline;
-    l->DrawLatex( text_x - 0.1, textheight, "#Delta#sigma_{CB}"    );
-    l->DrawLatex( text_x      , textheight, TString_error_on_sigma ); textheight -= nextline;
-
+    l->DrawLatex( text_x                , textheight, "#sigma_{eff}"         );
+    l->DrawLatex( text_x + column_shift , textheight, TString_effsigma       ); textheight -= nextline;
+    l->DrawLatex( text_x                , textheight, "#mu_{CB}"             );
+    l->DrawLatex( text_x + column_shift , textheight, TString_mean           ); textheight -= nextline;
+    l->DrawLatex( text_x                , textheight, "#sigma_{CB}"          );
+    l->DrawLatex( text_x + column_shift , textheight, TString_sigma          ); textheight -= nextline;
     
-    TLegend *legend = new TLegend( 0.6, 0.75, 0.9, 0.9 );
+    TLegend *legend = new TLegend( 0.18, 0.75, 0.6, 0.9 );
     legend->SetFillStyle(0);
     legend->SetBorderSize(0);
     legend->AddEntry( "datapoints" + varname, "datapoints " + varname, "lep");
@@ -394,6 +403,11 @@ void BinPlot::MakeSlicePlot(){
     ccor->Divide( n_columns_, n_rows_ );
     TCanvas *ccor74 = new TCanvas("ccor74","ccor74", perbin_width_ * n_columns_, perbin_height_ * n_rows_ );
     ccor74->Divide( n_columns_, n_rows_ );
+
+    // craw->SetLeftMargin(0.14);
+    // craw->SetBottomMargin(0.14);
+    // craw->SetTopMargin(0.02);
+    // craw->SetRightMargin(0.02);
 
 
     //#######################################
@@ -495,8 +509,10 @@ void BinPlot::MakeSlicePlot(){
     TCanvas* c = new TCanvas( "c_" + slicevarname_, "c_" + slicevarname_, c_width_, c_height_ );
     c->cd();
 
-    c->SetLeftMargin( sliceplot_hmargin_);
-    c->SetRightMargin(sliceplot_hmargin_);
+    c->SetLeftMargin(   0.14 );
+    c->SetRightMargin(  0.02 );
+    c->SetBottomMargin( 0.14 );
+    c->SetTopMargin(    0.01 + sliceplot_legheight_ );
 
     gPad->SetGridx();
     gPad->SetGridy();
@@ -506,36 +522,54 @@ void BinPlot::MakeSlicePlot(){
     // ======================================
     // Draw the means of DSCB
 
-    h_raw->SetMarkerStyle(22);
+    h_raw->SetMarkerStyle(8);
     h_raw->SetMarkerColor(kRed);
+    // h_raw->SetMarkerSize(0);
+    h_raw->SetLineWidth(2);
+    h_raw->SetLineStyle(1);
     h_raw->SetLineColor(kRed);
+    h_raw->SetFillColorAlpha(kRed,0.15);
     h_raw->SetName("h_raw");
-    h_raw->Draw("e p same");
+    h_raw->Draw("HISTE2L");
+
+    // h_cor->SetMarkerSize(0);
+    h_cor->SetMarkerStyle(22);
+    h_cor->SetMarkerColor(kBlue);
+    h_cor->SetLineWidth(2);
+    h_cor->SetLineStyle(1);
+    h_cor->SetLineColor(kBlue);
+    h_cor->SetFillColorAlpha(kBlue,0.15);
+    h_cor->SetName("h_cor");
+    h_cor->Draw("HISTSAMELE2");
+
+    // h_raw->Draw("e p same");
+    // h_cor->Draw("e p same");
+    if (draw_old_regression_){
+        h_cor74->SetMarkerStyle(22);
+        h_cor74->SetMarkerColor(kGreen);
+        // h_cor74->SetMarkerSize(0);
+        h_cor74->SetLineWidth(2);
+        h_cor74->SetLineStyle(1);
+        h_cor74->SetLineColor(kGreen);
+        h_cor74->SetFillColorAlpha(kGreen,0.15);
+        h_cor74->SetName("h_cor74");
+        h_cor74->Draw("HISTSAMELE2");
+        // h_cor74->Draw("e p same");
+        }
 
     // Set axis properties here
     h_raw->GetYaxis()->SetRangeUser( ymin_, ymax_ );
     h_raw->GetYaxis()->SetTitle("#mu_{CB}");
-    h_raw->GetYaxis()->SetTitleSize(0.043);
-    h_raw->GetYaxis()->SetTitleOffset(0.62);
 
     h_raw->GetXaxis()->SetRangeUser( xbins_[0], xbins_[nbins_] );
     h_raw->GetXaxis()->SetTitle( slicevartitle_ );
-    h_raw->GetXaxis()->SetTitleSize(0.043);
 
+    h_raw->GetYaxis()->SetTitleOffset(1.1);
 
-    h_cor->SetMarkerStyle(8);
-    h_cor->SetMarkerColor(kBlue);
-    h_cor->SetLineColor(kBlue);
-    h_cor->SetName("h_cor");
-    h_cor->Draw("e p same");
-
-    if (draw_old_regression_){
-        h_cor74->SetMarkerStyle(8);
-        h_cor74->SetMarkerColor(kGreen);
-        h_cor74->SetLineColor(kGreen);
-        h_cor74->SetName("h_cor74");
-        h_cor74->Draw("e p same");
-        }
+    h_raw->GetXaxis()->SetLabelSize(0.05);
+    h_raw->GetXaxis()->SetTitleSize(0.06);
+    h_raw->GetYaxis()->SetLabelSize(0.05);
+    h_raw->GetYaxis()->SetTitleSize(0.06);
 
 
     // ======================================
@@ -594,12 +628,12 @@ void BinPlot::MakeSlicePlot(){
     TLegend *sliceplot_legend = new TLegend( 0.15, 0.81,  0.85, 0.89 );
     sliceplot_legend->SetNColumns(3);
     sliceplot_legend->SetFillStyle(0);
-    sliceplot_legend->SetBorderSize(0);
+    // sliceplot_legend->SetBorderSize(0);
     
-    sliceplot_legend->AddEntry( "h_raw",      "E_{raw}/E_{true}:  #mu_{CB} #pm #sigma_{eff}", "pe" );
-    sliceplot_legend->AddEntry( "h_cor",      "E_{corr}/E_{true}:  #mu_{CB} #pm #sigma_{eff}", "pe" );
+    sliceplot_legend->AddEntry( "h_raw",      "E_{raw}/E_{true}:  #mu_{CB} #pm #sigma_{eff}", "pfl" );
+    sliceplot_legend->AddEntry( "h_cor",      "E_{corr}/E_{true}:  #mu_{CB} #pm #sigma_{eff}", "pfl" );
     
-    if (draw_old_regression_) sliceplot_legend->AddEntry( "h_cor74", "E_{corr}/E_{true}:  #mu_{CB} #pm #sigma_{eff} (74X)", "pe" ) ;
+    if (draw_old_regression_) sliceplot_legend->AddEntry( "h_cor74", "E_{corr}/E_{true}:  #mu_{CB} #pm #sigma_{eff} (74X)", "pfl" ) ;
 
     // sliceplot_legend->AddEntry( "ProfX_raw",  "E_{raw}/E_{true}:  mean #pm RMS", "pf" );
     // sliceplot_legend->AddEntry( "ProfX_cor",  "E_{corr}/E_{true}:  mean #pm RMS", "pf" );
@@ -622,18 +656,17 @@ void BinPlot::MakeSlicePlot(){
     TCanvas* c2 = new TCanvas( "c2_" + slicevarname_, "c2_" + slicevarname_, c_width_, c_height_ );
     c2->cd();
 
-    c2->SetLeftMargin( sliceplot_hmargin_);
-    c2->SetRightMargin(sliceplot_hmargin_);
-
+    c2->SetLeftMargin(   0.14 );
+    c2->SetRightMargin(  0.02 );
+    c2->SetBottomMargin( 0.14 );
+    c2->SetTopMargin(    0.01 + sliceplot_legheight_ );
 
     gPad->SetGridx();
     gPad->SetGridy();
-    gStyle->SetOptStat(0);
+    // gStyle->SetOptStat(0);
 
-    // ProfX_raw->Draw("HISTSAMEPE3");
-    // ProfX_cor->Draw("HISTSAMEPE3");
-    if (draw_meanRMS_) ProfX_raw->Draw("HISTSAMEP");
-    if (draw_meanRMS_) ProfX_cor->Draw("HISTSAMEP");
+    // if (draw_meanRMS_) ProfX_raw->Draw("HISTSAMEP");
+    // if (draw_meanRMS_) ProfX_cor->Draw("HISTSAMEP");
 
     // Overwrite bin errors with error on mean
     for(Int_t ibin=0; ibin<nbins_; ibin++) {
@@ -642,20 +675,22 @@ void BinPlot::MakeSlicePlot(){
         if (draw_old_regression_) h_cor74->SetBinError( ibin+1, errors_on_mean_cor74[ibin] );
         }
 
-    h_raw->Draw("e p same");
-    h_cor->Draw("e p same");
-    if (draw_old_regression_) h_cor74->Draw("e p same");
+    h_raw->Draw("E2L");
+    h_cor->Draw("HISTSAMELE2");
+
+    if (draw_old_regression_) h_cor74->Draw("HISTSAMELE2");
+
 
     // ======================================
     // Legend
     
-    TLegend *sliceplot_errorsonmean_legend = new TLegend( 0.15, 0.81,  0.85, 0.89 );
+    TLegend *sliceplot_errorsonmean_legend = new TLegend( 0.14, 0.99 - sliceplot_legheight_,  1.0-0.02 , 0.99 );
     sliceplot_errorsonmean_legend->SetNColumns(3);
     sliceplot_errorsonmean_legend->SetFillStyle(0);
-    sliceplot_errorsonmean_legend->SetBorderSize(0);
-    sliceplot_errorsonmean_legend->AddEntry( "h_raw",      "E_{raw}/E_{true}:  #mu_{CB} #pm #Delta#mu_{CB}", "pe" );
-    sliceplot_errorsonmean_legend->AddEntry( "h_cor",      "E_{corr}/E_{true}:  #mu_{CB} #pm #Delta#mu_{CB}", "pe" );
-    if (draw_old_regression_) sliceplot_errorsonmean_legend->AddEntry( "h_cor74", "E_{corr}/E_{true}:  #mu_{CB} #pm #Delta#mu_{CB} (74X)", "pe" ) ;
+    // sliceplot_errorsonmean_legend->SetBorderSize(0);
+    sliceplot_errorsonmean_legend->AddEntry( "h_raw",      "E_{raw}/E_{true}:  #mu_{CB} #pm #Delta#mu_{CB}", "plf" );
+    sliceplot_errorsonmean_legend->AddEntry( "h_cor",      "E_{corr}/E_{true}:  #mu_{CB} #pm #Delta#mu_{CB}", "plf" );
+    if (draw_old_regression_) sliceplot_errorsonmean_legend->AddEntry( "h_cor74", "E_{corr}/E_{true}:  #mu_{CB} #pm #Delta#mu_{CB} (74X)", "plf" ) ;
 
     // sliceplot_errorsonmean_legend->AddEntry( "ProfX_raw",  "E_{raw}/E_{true}:  mean #pm RMS", "pf" );
     // sliceplot_errorsonmean_legend->AddEntry( "ProfX_cor",  "E_{corr}/E_{true}:  mean #pm RMS", "pf" );
